@@ -1,11 +1,9 @@
 import React from "react";
 import Button from "./Button";
 
-const list = ["All", "Live", "Gaming"];
-
 const ButtonList = () => {
   return (
-    <div className="flex">
+    <div className="flex overflow-x-auto whitespace-nowrap px-4 py-2">
       <Button name="All" />
       <Button name="Gaming" />
       <Button name="Songs" />
@@ -13,11 +11,11 @@ const ButtonList = () => {
       <Button name="Soccer" />
       <Button name="Cricket" />
       <Button name="Cooking" />
-      <Button name="Cricket" />
       <Button name="Valentines" />
-      <Button name="Cricket" />
-      <Button name="Cooking" />
-      <Button name="Cricket" />
+      <Button name="Music" />
+      <Button name="Sports" />
+      <Button name="News" />
+      <Button name="Comedy" />
     </div>
   );
 };
