@@ -13,12 +13,60 @@ const VideoContainer = () => {
   const getVideos = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await fetch(YOUTUBE_VIDEOS_API);
-      const json = await data.json();
-      setVideos(json.items || []);
+      
+      // Random popular categories to get varied content
+      const categories = [
+        "music",
+        "gaming",
+        "sports",
+        "comedy",
+        "news",
+        "entertainment",
+        "technology",
+        "cooking",
+        "travel",
+        "education",
+      ];
+      
+      // Pick a random category
+      const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+      
+      // Search for videos in this category
+      const searchUrl = YOUTUBE_SEARCH_VIDEOS_API + encodeURIComponent(randomCategory);
+      const searchData = await fetch(searchUrl);
+      const searchJson = await searchData.json();
+      
+      if (searchJson.items && searchJson.items.length > 0) {
+        // Get video IDs from search results
+        const videoIds = searchJson.items.map((item) => item.id.videoId).join(",");
+        
+        // Fetch video details including statistics
+        const videoDetailsUrl = `https://youtube.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&id=${videoIds}&key=${GOOGLE_API_KEY}`;
+        const detailsData = await fetch(videoDetailsUrl);
+        const detailsJson = await detailsData.json();
+        
+        // Shuffle the videos array to get different order on each refresh
+        const shuffledVideos = (detailsJson.items || []).sort(() => Math.random() - 0.5);
+        setVideos(shuffledVideos);
+      } else {
+        // Fallback to trending videos if search fails
+        const data = await fetch(YOUTUBE_VIDEOS_API);
+        const json = await data.json();
+        const shuffledVideos = (json.items || []).sort(() => Math.random() - 0.5);
+        setVideos(shuffledVideos);
+      }
     } catch (error) {
       console.error("Error fetching videos:", error);
-      setVideos([]);
+      // Fallback to trending videos
+      try {
+        const data = await fetch(YOUTUBE_VIDEOS_API);
+        const json = await data.json();
+        const shuffledVideos = (json.items || []).sort(() => Math.random() - 0.5);
+        setVideos(shuffledVideos);
+      } catch (fallbackError) {
+        console.error("Error fetching fallback videos:", fallbackError);
+        setVideos([]);
+      }
     } finally {
       setLoading(false);
     }
