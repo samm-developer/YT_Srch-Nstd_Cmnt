@@ -1,29 +1,111 @@
-import React, { useEffect, useState } from "react";
-import { YOUTUBE_VIDEOS_API } from "../utils/contants";
+import React, { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
+import { YOUTUBE_VIDEOS_API, YOUTUBE_SEARCH_VIDEOS_API, GOOGLE_API_KEY } from "../utils/contants";
 import VideoCard, { AdVideoCard } from "./VideoCard";
 import { Link } from "react-router-dom";
 
 const VideoContainer = () => {
   const [videos, setVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get("search_query");
 
-  useEffect(() => {
-    getVideos();
+  const getVideos = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await fetch(YOUTUBE_VIDEOS_API);
+      const json = await data.json();
+      setVideos(json.items || []);
+    } catch (error) {
+      console.error("Error fetching videos:", error);
+      setVideos([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const getVideos = async () => {
-    const data = await fetch(YOUTUBE_VIDEOS_API);
-    const json = await data.json();
-    setVideos(json.items);
-  };
+  const getSearchVideos = useCallback(async (query) => {
+    try {
+      setLoading(true);
+      const searchUrl = YOUTUBE_SEARCH_VIDEOS_API + encodeURIComponent(query);
+      const data = await fetch(searchUrl);
+      const json = await data.json();
+      
+      if (json.items && json.items.length > 0) {
+        // Get video IDs from search results
+        const videoIds = json.items.map((item) => item.id.videoId).join(",");
+        
+        // Fetch video details including statistics
+        const videoDetailsUrl = `https://youtube.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&id=${videoIds}&key=${GOOGLE_API_KEY}`;
+        const detailsData = await fetch(videoDetailsUrl);
+        const detailsJson = await detailsData.json();
+        
+        setVideos(detailsJson.items || []);
+      } else {
+        setVideos([]);
+      }
+    } catch (error) {
+      console.error("Error fetching search videos:", error);
+      setVideos([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (searchQuery) {
+      getSearchVideos(searchQuery);
+    } else {
+      getVideos();
+    }
+  }, [searchQuery, getVideos, getSearchVideos]);
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-xl font-semibold">Loading...</p>
+      </div>
+    );
+  }
+
+  if (videos.length === 0 && searchQuery) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-xl font-semibold">No videos found for "{searchQuery}"</p>
+        <p className="text-gray-600 mt-2">Try a different search term</p>
+      </div>
+    );
+  }
+
+  if (videos.length === 0 && !searchQuery) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-xl font-semibold">No videos available</p>
+        <p className="text-gray-600 mt-2">Please check your internet connection or try again later</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-wrap">
-      {videos[0] && <AdVideoCard info={videos[0]} />}
-      {videos.map((video) => (
-        <Link key={video.id} to={"/watch?v=" + video.id}>
-          <VideoCard info={video} />
-        </Link>
-      ))}
+    <div>
+      {searchQuery && (
+        <div className="px-5 py-3">
+          <h2 className="text-xl font-semibold">
+            Search results for: <span className="text-gray-600">"{searchQuery}"</span>
+          </h2>
+          <p className="text-gray-500 text-sm mt-1">
+            {videos.length} {videos.length === 1 ? "video" : "videos"} found
+          </p>
+        </div>
+      )}
+      <div className="flex flex-wrap">
+        {!searchQuery && videos[0] && <AdVideoCard info={videos[0]} />}
+        {videos.map((video) => (
+          <Link key={video.id} to={"/watch?v=" + video.id}>
+            <VideoCard info={video} />
+          </Link>
+        ))}
+      </div>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { toggleMenu } from "../utils/appSlice";
 import { YOUTUBE_SEARCH_API } from "../utils/contants";
 import { cacheResults } from "../utils/searchSlice";
@@ -8,9 +9,22 @@ const Head = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const searchCache = useSelector((store) => store.search);
   const dispatch = useDispatch();
+
+  // Set search query from URL on mount and when URL changes
+  useEffect(() => {
+    try {
+      const query = searchParams?.get("search_query");
+      setSearchQuery(query || "");
+    } catch (error) {
+      console.error("Error reading search params:", error);
+      setSearchQuery("");
+    }
+  }, [searchParams]);
 
   /**
    *  searchCache = {
@@ -38,13 +52,18 @@ const Head = () => {
   }, [searchQuery, dispatch]);
 
   useEffect(() => {
+    if (!searchQuery) {
+      setSuggestions([]);
+      return;
+    }
+
     const timer = setTimeout(() => {
       if (searchCache[searchQuery]) {
         setSuggestions(searchCache[searchQuery]);
       } else {
         getSearchSugsestions();
       }
-    }, 200);
+    }, 300);
 
     return () => {
       clearTimeout(timer);
@@ -53,6 +72,28 @@ const Head = () => {
 
   const toggleMenuHandler = () => {
     dispatch(toggleMenu());
+  };
+
+  const handleSearch = (query = searchQuery) => {
+    try {
+      if (query && query.trim()) {
+        navigate(`/?search_query=${encodeURIComponent(query.trim())}`);
+        setShowSuggestions(false);
+      }
+    } catch (error) {
+      console.error("Error navigating:", error);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setSearchQuery(suggestion);
+    handleSearch(suggestion);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
   return (
@@ -64,13 +105,13 @@ const Head = () => {
           alt="menu"
           src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAARVBMVEX///8jHyAgHB0OBQgMAAWlpKQpJSaenZ309PUAAAAIAAD8/Pz5+fna2tqop6dvbW1oZmevrq4tKivFxMQYExRiYGC+vr7Dc4WrAAABB0lEQVR4nO3cS3LCMBAFQGIIIBPbhN/9jxqSyiIsTUnlydB9g1eSNV5MvdUKAAAAAAAAAAAAAAAAXtEwvscwDk3yHabSb2Loy/TRIOHUv8XRH+sHHMrSqR6U+hd1jHSE90P8lHC2/Lc0/0vzMy3WMdynxaFBwu+Jv4uh0cQHAAAAAAAAAIB59jG0ijdcT9sYTtcmK0PncumiuJRz/YD7bbf0ut4f3br+GvQt2PblrXrC3WbpUA/6sXrC/GeY/zvM/5aGmofHZiu0S//M/GoVDwAAAAAAAAAAZsjeuRerN1HL7hPy95fm76DNnzD/Lc3/0rxAJ3v+Xn0AAAAAAAAAAAAAAAD4T74AYhs1O+vt3ioAAAAASUVORK5CYII="
         />
-        <a href="/">
+        <Link to="/" onClick={() => setSearchQuery("")}>
           <img
             className="h-8 mx-2"
             alt="youtube-logo"
             src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/YouTube_Logo_2017.svg/2560px-YouTube_Logo_2017.svg.png"
           />
-        </a>
+        </Link>
       </div>
       <div className="col-span-10 px-10">
         <div>
@@ -80,17 +121,25 @@ const Head = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setShowSuggestions(true)}
-            onBlur={() => setShowSuggestions(false)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+            onKeyPress={handleKeyPress}
           />
-          <button className="border border-gray-400 px-5 py-2 rounded-r-full bg-gray-100">
+          <button
+            onClick={() => handleSearch()}
+            className="border border-gray-400 px-5 py-2 rounded-r-full bg-gray-100 cursor-pointer hover:bg-gray-200"
+          >
             🔍
           </button>
         </div>
-        {showSuggestions && (
-          <div className="fixed bg-white py-2 px-2 w-[37rem] shadow-lg rounded-lg border border-gray-100">
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="fixed bg-white py-2 px-2 w-[37rem] shadow-lg rounded-lg border border-gray-100 z-50">
             <ul>
               {suggestions.map((s) => (
-                <li key={s} className="py-2 px-3 shadow-sm hover:bg-gray-100">
+                <li
+                  key={s}
+                  className="py-2 px-3 shadow-sm hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleSuggestionClick(s)}
+                >
                   🔍 {s}
                 </li>
               ))}

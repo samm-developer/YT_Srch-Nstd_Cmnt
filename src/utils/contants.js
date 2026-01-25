@@ -1,4 +1,4 @@
-const GOOGLE_API_KEY = 
+export const GOOGLE_API_KEY = 
 // "AIzaSyAtIibgU4boIyzkgbabBCe8BJJsBSfNlWA";
 "AIzaSyB0CIkSPCXMzusM-Bn93iGJVWZdOb9y7yo"
 
@@ -10,5 +10,10 @@ export const YOUTUBE_VIDEOS_API =
 
 export const YOUTUBE_SEARCH_API =
   "/api/suggest/complete/search?client=firefox&ds=yt&q=";
+
+export const YOUTUBE_SEARCH_VIDEOS_API =
+  "https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&type=video&key=" +
+  GOOGLE_API_KEY +
+  "&q=";
 
 // Live Chat >>>> Infinite Scroll >>>>>> Pagination
