@@ -4,6 +4,28 @@ import { YOUTUBE_VIDEOS_API, YOUTUBE_SEARCH_VIDEOS_API, GOOGLE_API_KEY } from ".
 import VideoCard, { AdVideoCard } from "./VideoCard";
 import { Link } from "react-router-dom";
 
+// Helper function to parse ISO 8601 duration to seconds
+const parseDuration = (duration) => {
+  if (!duration) return 0;
+  
+  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!match) return 0;
+  
+  const hours = parseInt(match[1] || 0);
+  const minutes = parseInt(match[2] || 0);
+  const seconds = parseInt(match[3] || 0);
+  
+  return hours * 3600 + minutes * 60 + seconds;
+};
+
+// Filter out shorts (videos less than 60 seconds)
+const filterShorts = (videos) => {
+  return videos.filter((video) => {
+    const duration = parseDuration(video.contentDetails?.duration);
+    return duration >= 60;
+  });
+};
+
 const VideoContainer = () => {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,14 +67,16 @@ const VideoContainer = () => {
         const detailsData = await fetch(videoDetailsUrl);
         const detailsJson = await detailsData.json();
         
-        // Shuffle the videos array to get different order on each refresh
-        const shuffledVideos = (detailsJson.items || []).sort(() => Math.random() - 0.5);
+        // Filter out shorts and shuffle the videos array
+        const filteredVideos = filterShorts(detailsJson.items || []);
+        const shuffledVideos = filteredVideos.sort(() => Math.random() - 0.5);
         setVideos(shuffledVideos);
       } else {
         // Fallback to trending videos if search fails
         const data = await fetch(YOUTUBE_VIDEOS_API);
         const json = await data.json();
-        const shuffledVideos = (json.items || []).sort(() => Math.random() - 0.5);
+        const filteredVideos = filterShorts(json.items || []);
+        const shuffledVideos = filteredVideos.sort(() => Math.random() - 0.5);
         setVideos(shuffledVideos);
       }
     } catch (error) {
@@ -61,7 +85,8 @@ const VideoContainer = () => {
       try {
         const data = await fetch(YOUTUBE_VIDEOS_API);
         const json = await data.json();
-        const shuffledVideos = (json.items || []).sort(() => Math.random() - 0.5);
+        const filteredVideos = filterShorts(json.items || []);
+        const shuffledVideos = filteredVideos.sort(() => Math.random() - 0.5);
         setVideos(shuffledVideos);
       } catch (fallbackError) {
         console.error("Error fetching fallback videos:", fallbackError);
@@ -88,7 +113,9 @@ const VideoContainer = () => {
         const detailsData = await fetch(videoDetailsUrl);
         const detailsJson = await detailsData.json();
         
-        setVideos(detailsJson.items || []);
+        // Filter out shorts
+        const filteredVideos = filterShorts(detailsJson.items || []);
+        setVideos(filteredVideos);
       } else {
         setVideos([]);
       }
