@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleMenu } from "../utils/appSlice";
 import { YOUTUBE_SEARCH_API } from "../utils/contants";
@@ -19,6 +19,24 @@ const Head = () => {
    *  searchQuery = iphone
    */
 
+  const getSearchSugsestions = useCallback(async () => {
+    try {
+      const data = await fetch(YOUTUBE_SEARCH_API + searchQuery);
+      const json = await data.json();
+      //console.log(json[1]);
+      setSuggestions(json[1]);
+
+      // update cache
+      dispatch(
+        cacheResults({
+          [searchQuery]: json[1],
+        })
+      );
+    } catch (error) {
+      console.error("Error fetching search suggestions:", error);
+    }
+  }, [searchQuery, dispatch]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchCache[searchQuery]) {
@@ -31,21 +49,7 @@ const Head = () => {
     return () => {
       clearTimeout(timer);
     };
-  }, [searchQuery]);
-
-  const getSearchSugsestions = async () => {
-    const data = await fetch(YOUTUBE_SEARCH_API + searchQuery);
-    const json = await data.json();
-    //console.log(json[1]);
-    setSuggestions(json[1]);
-
-    // update cache
-    dispatch(
-      cacheResults({
-        [searchQuery]: json[1],
-      })
-    );
-  };
+  }, [searchQuery, searchCache, getSearchSugsestions]);
 
   const toggleMenuHandler = () => {
     dispatch(toggleMenu());
