@@ -16,10 +16,6 @@ const Sidebar = () => {
     navigate("/?search_query=shorts");
   };
 
-  const handleVideos = () => {
-    navigate("/");
-  };
-
   const handleLive = () => {
     navigate("/?search_query=live");
   };

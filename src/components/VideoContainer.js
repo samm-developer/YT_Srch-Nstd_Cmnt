@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { YOUTUBE_VIDEOS_API, YOUTUBE_SEARCH_VIDEOS_API, GOOGLE_API_KEY } from "../utils/contants";
-import VideoCard, { AdVideoCard } from "./VideoCard";
+import VideoCard from "./VideoCard";
 import { Link } from "react-router-dom";
 
 const VideoContainer = () => {
