@@ -1,7 +1,7 @@
 export const GOOGLE_API_KEY = 
 // "AIzaSyAtIibgU4boIyzkgbabBCe8BJJsBSfNlWA";
-"AIzaSyB0CIkSPCXMzusM-Bn93iGJVWZdOb9y7yo"
-
+// "AIzaSyB0CIkSPCXMzusM-Bn93iGJVWZdOb9y7yo"
+"AIzaSyCA_NDdNcn45UdVqV6_TREYKUAhb-tcTCM";
 export const LIVE_CHAT_COUNT = 25;
 
 export const YOUTUBE_VIDEOS_API =
