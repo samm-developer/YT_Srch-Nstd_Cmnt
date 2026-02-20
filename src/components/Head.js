@@ -35,7 +35,7 @@ const Head = () => {
 
   const getSearchSugsestions = useCallback(async () => {
     try {
-      const data = await fetch(YOUTUBE_SEARCH_API + searchQuery);
+      const data = await fetch(YOUTUBE_SEARCH_API + encodeURIComponent(searchQuery));
       const json = await data.json();
       //console.log(json[1]);
       setSuggestions(json[1]);

@@ -1,0 +1,10 @@
+[build]
+  command = "npm run build"
+  publish = "build"
+  functions = "netlify/functions"
+
+# SPA: serve index.html for client-side routes (Netlify serves functions before this)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -8,8 +8,11 @@ export const YOUTUBE_VIDEOS_API =
   "https://youtube.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&chart=mostPopular&maxResults=50&regionCode=IN&key=" +
   GOOGLE_API_KEY;
 
+// Local dev: proxy in setupProxy.js. Production: Netlify function
 export const YOUTUBE_SEARCH_API =
-  "/api/suggest/complete/search?client=firefox&ds=yt&q=";
+  process.env.NODE_ENV === "production"
+    ? "/.netlify/functions/suggest?q="
+    : "/api/suggest/complete/search?client=firefox&ds=yt&q=";
 
 export const YOUTUBE_SEARCH_VIDEOS_API =
   "https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&type=video&key=" +
